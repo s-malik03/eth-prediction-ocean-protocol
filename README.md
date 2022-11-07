@@ -19,11 +19,13 @@ optional arguments:
 ```
 ### Training
 ```
+cd lstm
 python stock-prediction.py
 ```
 
 ### Prediction
 The output will be output to the eth_prediction.csv
 ```
+cd lstm
 python stock-prediction.py -p
 ```
