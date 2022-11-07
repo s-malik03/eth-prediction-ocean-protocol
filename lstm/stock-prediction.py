@@ -13,13 +13,17 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint, Callback
 import matplotlib.pyplot as plt
 from datetime import datetime
 import argparse
-
+from pathlib import Path
 
 previous_date = 72
 future_date_to_predict = 15
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--predict", action="store_true", help="Predict model")
+    parser.add_argument("-p", "--predict", action="store_true", help="Set to prediction mode")
+    parser.add_argument("-m", "--model_path", help="Model path", default="./model/eth_model.h5")
+    parser.add_argument("-it", "--input_train_path", help="Input path for the data for training", default="./dataset/EHTUSDhrDataset.csv")
+    parser.add_argument("-ip", "--input_predict_path", help="Input path for the data to predict", default="./dataset/ETHUSD_1106.csv")
+    
     args = parser.parse_args()
     return args
 
@@ -118,6 +122,10 @@ def calc_nmse(y, yhat) -> float:
     nmse = mse_xy / mse_x
     return nmse
 
+def save_list(list_: list, file_name: str):
+    """Save a file shaped: [1.2, 3.4, 5.6, ..]"""
+    p = Path(file_name)
+    p.write_text(str(list_))
 def train_stock_prediction_model(file_name, output=False):
     train = readTrain(file_name)
 
@@ -212,7 +220,7 @@ def predict_from_ocean_dataset(df, model_file_name, parameters):
     plt.ylabel('Price')
     plt.legend(['Prediction'], loc='upper left') 
     plt.savefig('result_future12.png')
-    
+    save_list(pred_vals, "eth_predictions.csv")
     return pred_vals
 
 if __name__ == '__main__':
@@ -220,11 +228,10 @@ if __name__ == '__main__':
     args = parse_args()
 
     if args.predict == False:
-        train_stock_prediction_model(file_name='./dataset/EHTUSDhrDataset.csv', output=True)
+        train_stock_prediction_model(file_name=args.input_train_path, output=True)
     else:
         with open("parameters.pkl","rb") as f:
             parameters = pickle.load(f)
-        df = pd.read_csv('./dataset/ETHUSD_1106.csv')
+        df = pd.read_csv(args.input_predict_path)
         #pred_vals = predict_from_ocean_dataset(df, './model/eth_model_00-57-46.h5', parameters)
-        pred_vals = predict_from_ocean_dataset(df, './model/eth_model_19-35-17.h5', parameters)
-    
+        pred_vals = predict_from_ocean_dataset(df, args.model_path, parameters)
